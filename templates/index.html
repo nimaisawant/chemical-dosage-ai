@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AI Water Treatment Dashboard</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+
+<div class="container mt-5">
+    <div class="card shadow-lg p-4">
+
+        <h2 class="text-center mb-4">💧 AI Chlorine Dosage Dashboard</h2>
+
+        <form action="/predict" method="post">
+
+            <div class="input-group mb-3">
+                <span class="input-group-text">pH</span>
+                <input type="number" step="0.1" name="pH"
+                class="form-control small-input"
+                value="{{ input_ph if input_ph else '' }}" required>
+            </div>
+
+            <div class="input-group mb-3">
+                <span class="input-group-text">Turbidity</span>
+                <input type="number" step="0.1" name="turbidity"
+                class="form-control small-input"
+                value="{{ input_turbidity if input_turbidity else '' }}" required>
+                <span class="input-group-text">NTU</span>
+            </div>
+
+            <div class="input-group mb-3">
+                <span class="input-group-text">Temperature</span>
+                <input type="number" step="0.1" name="temp"
+                class="form-control small-input"
+                value="{{ input_temp if input_temp else '' }}" required>
+                <span class="input-group-text">°C</span>
+            </div>
+
+            <button class="btn btn-primary w-100">Predict</button>
+        </form>
+
+        {% if result %}
+        <div class="alert alert-success mt-4 text-center">
+            <h4>Recommended Chlorine Dosage: {{ result }} mg/L</h4>
+            <h5>{{ status }}</h5>
+        </div>
+        {% endif %}
+
+        {% if explanation %}
+        <div class="explanation-box">
+            <h5>🔍 Why this prediction?</h5>
+            <ul>
+                {% for item in explanation %}
+                <li>{{ item }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+
+        {% if turbidity_data %}
+
+        <h4 class="mt-4 text-center">📊 Analysis Dashboard</h4>
+
+        <div class="chart-box">
+            <h5>Turbidity vs Dosage (NTU vs mg/L)</h5>
+            <canvas id="turbidityChart"></canvas>
+        </div>
+
+        <div class="chart-box">
+            <h5>pH vs Dosage</h5>
+            <canvas id="phChart"></canvas>
+        </div>
+
+        <div class="chart-box">
+            <h5>Temperature vs Dosage (°C vs mg/L)</h5>
+            <canvas id="tempChart"></canvas>
+        </div>
+
+        <script>
+        const turbidityData = JSON.parse('{{ turbidity_data | safe }}');
+        const dosageData = JSON.parse('{{ dosage_data | safe }}');
+
+        new Chart(document.getElementById('turbidityChart'), {
+            type: 'line',
+            data: {
+                labels: turbidityData,
+                datasets: [{
+                    label: 'Dosage',
+                    data: dosageData,
+                    borderColor: '#00ffff',
+                    borderWidth: 4
+                }]
+            }
+        });
+
+        const phData = JSON.parse('{{ ph_data | safe }}');
+        const phDosage = JSON.parse('{{ ph_dosage | safe }}');
+
+        new Chart(document.getElementById('phChart'), {
+            type: 'line',
+            data: {
+                labels: phData,
+                datasets: [{
+                    label: 'Dosage',
+                    data: phDosage,
+                    borderColor: '#ffcc00',
+                    borderWidth: 4
+                }]
+            }
+        });
+
+        const tempData = JSON.parse('{{ temp_data | safe }}');
+        const tempDosage = JSON.parse('{{ temp_dosage | safe }}');
+
+        new Chart(document.getElementById('tempChart'), {
+            type: 'line',
+            data: {
+                labels: tempData,
+                datasets: [{
+                    label: 'Dosage',
+                    data: tempDosage,
+                    borderColor: '#ff6666',
+                    borderWidth: 4
+                }]
+            }
+        });
+        </script>
+
+        {% endif %}
+
+    </div>
+</div>
+
+</body>
+</html>
